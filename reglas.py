@@ -1,115 +1,106 @@
-# reglas.py
-# Motor de reglas normativas ADIF
-# Basado principalmente en NAS 811 (Edición 3)
-# Proyecto RAILTEC – Validaciones Automáticas
+# basado en NAS 811 pricipalmete 
 
 
-
-# regla NAS - 811 
 
 def comprobar_tipo_senal(tipo_linea, tipo_via, tipo_senal):
-    """
-    NAS 811 – 6.2 Señales
-
-    Convencional:
-      - Vía general → señal alta
-      - Vía de apartado → señal baja
-    Alta Velocidad:
-      - Todas las señales deben ser altas
-    """
-
     tipo_linea = tipo_linea.lower()
     tipo_via = tipo_via.lower()
     tipo_senal = tipo_senal.lower()
 
     if tipo_linea == "av":
         if tipo_senal == "alta":
-            return True, "Cumple NAS 811: señal alta en línea de Alta Velocidad"
-        else:
-            return False, "No cumple NAS 811: en alta velocidad las señales deben ser altas"
+            return True, "Señal alta correcta en línea AV"
+        return False, "En alta velocidad las señales deben ser altas"
 
     if tipo_linea == "convencional":
         if tipo_via == "general" and tipo_senal == "alta":
-            return True, "Cumple NAS 811: señal alta en vía general"
+            return True, "Señal alta correcta en vía general"
         if tipo_via == "apartado" and tipo_senal == "baja":
-            return True, "Cumple NAS 811: señal baja en vía de apartado"
-        return False, "No cumple NAS 811: tipo de señal incorrecto para la vía"
+            return True, "Señal baja correcta en vía de apartado"
+        return False, "Tipo de señal incorrecto para la vía"
 
-    return False, "Datos de línea o vía no válidos"
+    return False, "Tipo de línea no reconocido"
 
 
 def comprobar_distancia_senal_aguja(distancia, tipo_linea):
-    """
-    NAS 811 – 6.2
-    Distancia mínima recomendada entre señal y punta de aguja
-      - Convencional: ≥ 20 m
-      - Alta Velocidad: ≥ 30 m
-    """
-
     tipo_linea = tipo_linea.lower()
 
-    if tipo_linea == "convencional" and distancia >= 20:
-        return True, "Cumple NAS 811: distancia señal‑aguja adecuada en línea convencional"
+    if tipo_linea == "convencional":
+        return (
+            distancia >= 20,
+            "Distancia señal‑aguja correcta (≥ 20 m)" if distancia >= 20
+            else "Distancia señal‑aguja insuficiente (≥ 20 m)"
+        )
 
-    if tipo_linea == "av" and distancia >= 30:
-        return True, "Cumple NAS 811: distancia señal‑aguja adecuada en alta velocidad"
+    if tipo_linea == "av":
+        return (
+            distancia >= 30,
+            "Distancia señal‑aguja correcta (≥ 30 m)" if distancia >= 30
+            else "Distancia señal‑aguja insuficiente (≥ 30 m)"
+        )
 
-    return False, "No cumple NAS 811: distancia señal‑aguja insuficiente"
+    return False, "Tipo de línea no válido"
 
 
-def comprobar_longitud_circuito_via(longitud_cv):
-    """
-    NAS 811 – 6.3 Circuitos de vía
-    Longitud mínima de un circuito de vía: 20 m
-    """
 
-    if longitud_cv >= 20:
-        return True, "Cumple NAS 811: longitud mínima del circuito de vía"
+# regla de circuitos de via nas 811
+def comprobar_circuito_via(longitud_cv, zona_muerta):
+    mensajes = []
+    cumple = True
+
+    if longitud_cv < 20:
+        cumple = False
+        mensajes.append("Circuito de vía menor de 20 m")
     else:
-        return False, "No cumple NAS 811: el circuito de vía es menor de 20 m"
+        mensajes.append("Longitud de circuito de vía correcta")
 
-
-def comprobar_zona_muerta(longitud_zm):
-    """
-    NAS 811 – 6.3
-    Zona muerta entre circuitos de vía:
-    Recomendable < 3 m
-    """
-
-    if longitud_zm <= 3:
-        return True, "Cumple NAS 811: zona muerta dentro de límites"
+    if zona_muerta > 3:
+        cumple = False
+        mensajes.append("Zona muerta excesiva entre circuitos")
     else:
-        return False, "No cumple NAS 811: zona muerta excesiva entre CV"
+        mensajes.append("Zona muerta dentro de límites")
+
+    return cumple, "; ".join(mensajes)
 
 
 
-def comprobar_distancia_senal_baliza(distancia, sistema):
-    """
-    NAS 811 / NAS 154 / NAS 840
-    Distancia mínima señal – baliza de pie:
-      - ASFA: ≥ 5 m
-      - ERTMS: ≥ 9 m
-    """
 
+#reglas de balizas nas 811, nas 154, nas 840
+def comprobar_baliza(distancia, sistema):
     sistema = sistema.upper()
 
-    if sistema == "ASFA" and distancia >= 5:
-        return True, "Cumple NAS 811: distancia señal‑baliza ASFA correcta"
+    if sistema == "ASFA":
+        return (
+            distancia >= 5,
+            "Baliza ASFA correctamente situada" if distancia >= 5
+            else "Baliza ASFA demasiado cercana a la señal"
+        )
 
-    if sistema == "ERTMS" and distancia >= 9:
-        return True, "Cumple NAS 811: distancia señal‑baliza ERTMS correcta"
+    if sistema == "ERTMS":
+        return (
+            distancia >= 9,
+            "Baliza ERTMS correctamente situada" if distancia >= 9
+            else "Baliza ERTMS demasiado cercana a la señal"
+        )
 
-    return False, "No cumple NAS 811: distancia señal‑baliza insuficiente"
+    return False, "Sistema de protección no reconocido"
 
+#regla de trazado de memotria de via 
+#geometría de la via, de que el radio de curva, pendiente y demas que sean compatibles
 
-def comprobar_radio_curva(radio, velocidad):
-    """
-    Regla geométrica simplificada compatible con criterios ADIF
-    """
+def comprobar_tramo_trazado(pk_inicio, pk_fin, radio, pendiente):
+    cumple = True
+    mensajes = []
 
-    if velocidad <= 160 and radio >= 1000:
-        return True, "Radio de curva adecuado para la velocidad"
-    elif velocidad > 160 and radio >= 2500:
-        return True, "Radio de curva adecuado para alta velocidad"
-    else:
-        return False, "Radio de curva insuficiente para la velocidad establecida"
+    if radio < 1000:
+        cumple = False
+        mensajes.append("Radio de curva reducido para señalización")
+
+    if abs(pendiente) > 25:
+        cumple = False
+        mensajes.append("Pendiente elevada (>25‰)")
+
+    if cumple:
+        mensajes.append("Tramo geométricamente compatible")
+
+    return cumple, f"PK {pk_inicio} – {pk_fin}: " + "; ".join(mensajes)

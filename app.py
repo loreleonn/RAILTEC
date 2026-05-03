@@ -1,97 +1,68 @@
-# app.py
-# Aplicación principal de validación normativa
-# Proyecto RAILTEC – NAS 811
-
 from reglas import (
     comprobar_tipo_senal,
     comprobar_distancia_senal_aguja,
-    comprobar_longitud_circuito_via,
-    comprobar_zona_muerta,
-    comprobar_distancia_senal_baliza,
-    comprobar_radio_curva
+    comprobar_circuito_via,
+    comprobar_baliza,
+    comprobar_tramo_trazado
 )
+
+from informe import generar_informe
 
 
 def main():
-    print("========================================")
-    print(" RAILTEC – VALIDACIÓN AUTOMÁTICA NAS 811 ")
-    print("========================================\n")
+    print("VALIDACIÓN DE DISEÑO DE VÍA (segun la normativa establecida por ADIF) ")
 
-
+    # datos de entrada generales para la validación 
     tipo_linea = input("Tipo de línea (Convencional / AV): ")
     tipo_via = input("Tipo de vía (general / apartado): ")
     tipo_senal = input("Tipo de señal (alta / baja): ")
+    distancia_senal_aguja = float(input("Distancia señal‑aguja (m): "))
+    sistema = input("Sistema (ASFA / ERTMS): ")
+    distancia_baliza = float(input("Distancia señal‑baliza (m): "))
 
-    distancia_senal_aguja = float(
-        input("Distancia señal – aguja (m): ")
-    )
+    # circuitos de la via 
+    print("\nCIRCUITOS DE VÍA:")
+    longitud_cv = float(input("Longitud del circuito de vía (m): "))
+    zona_muerta = float(input("Zona muerta entre circuitos (m): "))
 
-    longitud_cv = float(
-        input("Longitud del circuito de vía (m): ")
-    )
-
-    zona_muerta = float(
-        input("Longitud de la zona muerta entre CV (m): ")
-    )
-
-    sistema = input("Sistema de protección (ASFA / ERTMS): ")
-
-    distancia_senal_baliza = float(
-        input("Distancia señal – baliza (m): ")
-    )
-
-    velocidad = float(
-        input("Velocidad máxima de la línea (km/h): ")
-    )
-
-    radio_curva = float(
-        input("Radio de curva (m): ")
-    )
-
-  
+    # tamos que van a ser validados 
+    print("\nTRAMOS DE TRAZADO:")
+    num_tramos = int(input("Número de tramos a validar (máximo 5): "))
+    
+    if num_tramos < 1 or num_tramos > 5:
+        print("\n el numero de tramos a validar debe estar entre 1 y 5.")
+        return
 
     resultados = []
 
+    # relgas generales de la normativa adif 
     r1 = comprobar_tipo_senal(tipo_linea, tipo_via, tipo_senal)
-    resultados.append(("Tipo de señal (NAS 811)", r1))
+    resultados.append(("Tipo de señal (NAS 811)", r1[0], r1[1]))
 
     r2 = comprobar_distancia_senal_aguja(distancia_senal_aguja, tipo_linea)
-    resultados.append(("Distancia señal‑aguja (NAS 811)", r2))
+    resultados.append(("Distancia señal‑aguja (NAS 811)", r2[0], r2[1]))
 
-    r3 = comprobar_longitud_circuito_via(longitud_cv)
-    resultados.append(("Longitud circuito de vía (NAS 811)", r3))
+    r3 = comprobar_circuito_via(longitud_cv, zona_muerta)
+    resultados.append(("Circuitos de vía (NAS 811)", r3[0], r3[1]))
 
-    r4 = comprobar_zona_muerta(zona_muerta)
-    resultados.append(("Zona muerta entre CV (NAS 811)", r4))
+    r4 = comprobar_baliza(distancia_baliza, sistema)
+    resultados.append(("Balizamiento (NAS 811)", r4[0], r4[1]))
 
-    r5 = comprobar_distancia_senal_baliza(distancia_senal_baliza, sistema)
-    resultados.append(("Distancia señal‑baliza (NAS 811)", r5))
+    # Reglas por tramo
+    for i in range(num_tramos):
+        print(f"\nTramo {i + 1}")
+        pk_ini = input("PK inicio: ")
+        pk_fin = input("PK fin: ")
+        radio = float(input("Radio de curva (m): "))
+        pendiente = float(input("Pendiente (‰): "))
 
-    r6 = comprobar_radio_curva(radio_curva, velocidad)
-    resultados.append(("Radio de curva", r6))
+        cumple, mensaje = comprobar_tramo_trazado(
+            pk_ini, pk_fin, radio, pendiente
+        )
+        resultados.append((f"Tramo {pk_ini}–{pk_fin}", cumple, mensaje))
 
-
-    print("\n----------------------------------------")
-    print(" INFORME DE CUMPLIMIENTO NORMATIVO ")
-    print("----------------------------------------\n")
-
-    cumple_total = True
-
-    for nombre, resultado in resultados:
-        cumple, mensaje = resultado
-        estado = "✅ CUMPLE" if cumple else "❌ NO CUMPLE"
-        print(f"{nombre}: {estado}")
-        print(f"  → {mensaje}\n")
-
-        if not cumple:
-            cumple_total = False
-
-    print("----------------------------------------")
-    if cumple_total:
-        print("✅ CONCLUSIÓN FINAL: EL DISEÑO CUMPLE NAS 811")
-    else:
-        print("❌ CONCLUSIÓN FINAL: EL DISEÑO NO CUMPLE NAS 811")
-    print("----------------------------------------")
+    # devuelve al final de que si cumple o no, cuales si y cuales no 
+    generar_informe(resultados)
 
 
 if __name__ == "__main__":
