@@ -8,11 +8,5 @@ Automatizar la comprobación normativa en:
 - Balizamiento
 - Geometría del trazado ferroviario
 
-mediante un motor de reglas programado.
 
-## Tecnologías
-- Python 3
-- Control de versiones con Git
 
-## Estado del proyecto
-Prototipo funcional en desarrollo para el proyecto transdisciplinar RAILTEC.
