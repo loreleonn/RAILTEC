@@ -1,17 +1,52 @@
 def generar_informe(resultados):
-    print("Cumplimiento de la normatia segun los datos introducidos:\n")
+
+    texto = ""
 
     cumple_total = True
 
     for nombre, cumple, mensaje in resultados:
-        estado = "SI CUMPLE" if cumple else "NO CUMPLE"
-        print(f"{nombre}: {estado}")
-        print(f"  → {mensaje}\n")
+
+        estado = "✔ SI CUMPLE" if cumple else "✖ NO CUMPLE"
+
+        texto += f"""
+        <div style="
+            background:#1e293b;
+            padding:15px;
+            border-radius:12px;
+            margin-bottom:10px;
+        ">
+
+            <h3>{nombre}</h3>
+
+            <p style="
+                color:{'#22c55e' if cumple else '#ef4444'};
+                font-weight:bold;
+            ">
+                {estado}
+            </p>
+
+            <p>{mensaje}</p>
+
+        </div>
+        """
 
         if not cumple:
             cumple_total = False
 
     if cumple_total:
-        print("EL DISEÑO CUMPLE COMPLETAMENTE CON LAS NORMAS NAS 811")
+
+        texto += """
+        <h1 style='color:#22c55e'>
+        ✔ EL DISEÑO CUMPLE NAS 811
+        </h1>
+        """
+
     else:
-        print("EXISTEN INCUMPLIMIENTOS. ")
+
+        texto += """
+        <h1 style='color:#ef4444'>
+        ✖ EXISTEN INCUMPLIMIENTOS
+        </h1>
+        """
+
+    return texto

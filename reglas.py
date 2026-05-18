@@ -27,16 +27,16 @@ def comprobar_distancia_senal_aguja(distancia, tipo_linea):
 
     if tipo_linea == "convencional":
         return (
-            distancia >= 20,
-            "Distancia señal‑aguja correcta (≥ 20 m)" if distancia >= 20
-            else "Distancia señal‑aguja insuficiente (≥ 20 m)"
+            distancia >= 200,
+            "Distancia señal‑aguja correcta (≥ 200 m)" if distancia >= 200
+            else "Distancia señal‑aguja insuficiente (≥ 200 m)"
         )
 
     if tipo_linea == "av":
         return (
-            distancia >= 30,
-            "Distancia señal‑aguja correcta (≥ 30 m)" if distancia >= 30
-            else "Distancia señal‑aguja insuficiente (≥ 30 m)"
+            distancia >= 300,
+            "Distancia señal‑aguja correcta (≥ 300 m)" if distancia >= 300
+            else "Distancia señal‑aguja insuficiente (≥ 300 m)"
         )
 
     return False, "Tipo de línea no válido"
@@ -51,12 +51,15 @@ def comprobar_circuito_via(longitud_cv, zona_muerta):
     if longitud_cv < 20:
         cumple = False
         mensajes.append("Circuito de vía menor de 20 m")
+    elif longitud_cv > 1200:
+        cumple = False
+        mensajes.append("Longitud de circuito de vía excesiva (≤ 1200 m)")
     else:
         mensajes.append("Longitud de circuito de vía correcta")
 
-    if zona_muerta > 3:
+    if zona_muerta > 10:
         cumple = False
-        mensajes.append("Zona muerta excesiva entre circuitos")
+        mensajes.append("Zona muerta excesiva (≤ 10 m)")
     else:
         mensajes.append("Zona muerta dentro de límites")
 
@@ -70,18 +73,18 @@ def comprobar_baliza(distancia, sistema):
     sistema = sistema.upper()
 
     if sistema == "ASFA":
-        return (
-            distancia >= 5,
-            "Baliza ASFA correctamente situada" if distancia >= 5
-            else "Baliza ASFA demasiado cercana a la señal"
-        )
+        if distancia < 5:
+            return False, "Baliza ASFA demasiado cercana a la señal"
+        if distancia > 300:
+            return False, "Baliza ASFA demasiado lejana (≤ 300 m)"
+        return True, "Baliza ASFA correctamente situada"
 
     if sistema == "ERTMS":
-        return (
-            distancia >= 9,
-            "Baliza ERTMS correctamente situada" if distancia >= 9
-            else "Baliza ERTMS demasiado cercana a la señal"
-        )
+        if distancia < 9:
+            return False, "Baliza ERTMS demasiado cercana a la señal"
+        if distancia > 1000:
+            return False, "Baliza ERTMS demasiado lejana (≤ 1000 m)"
+        return True, "Baliza ERTMS correctamente situada"
 
     return False, "Sistema de protección no reconocido"
 
